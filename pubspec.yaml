@@ -1,0 +1,45 @@
+name: trueke
+description: Aplicación para intercambio de bienes.
+
+publish_to: 'none' # Remove this line if you wish to publish to pub.dev
+
+version: 1.0.0+1
+
+environment:
+  sdk: ">=2.7.0 <3.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  provider: ^4.0.4
+  path_provider: ^2.0.1
+  shared_preferences: ^2.0.5
+  http: ^0.12.2
+  cupertino_icons: ^1.0.2
+  carousel_slider: ^4.0.0
+  font_awesome_flutter: ^9.1.0
+  sliding_card: ^0.1.2
+  cool_alert: ^1.1.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+flutter:
+
+  assets:
+    - assets/logos/trueke.png
+    - assets/logos/facebook.jpg
+    - assets/logos/google.jpg
+    - assets/images/
+
+  fonts:
+    - family: OpenSans
+      fonts:
+        - asset: assets/fonts/OpenSans.ttf
+    - family: CM Sans Serif
+      fonts:
+        - asset: assets/fonts/cm_sans_serif_2012.ttf
+
+  uses-material-design: true
