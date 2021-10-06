@@ -1,25 +1,36 @@
 import 'package:carousel_slider/carousel_slider.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:provider/provider.dart';
+import 'package:trueke/providers/auth_provider.dart';
 import 'package:trueke/screens/notification_screen.dart';
+import 'package:trueke/services/database_service.dart';
 import 'package:trueke/tiles/product_tile.dart';
+import 'package:trueke/models/post.dart';
 import 'package:trueke/utilities/constants.dart';
 
 class HomeScreen extends StatefulWidget {
+  final User user;
+
+  const HomeScreen({Key key, this.user}) : super(key: key);
   @override
   _HomeScreenState createState() => _HomeScreenState();
 }
 
 class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMixin{
-
-  TabController _tabController;
+  DatabaseService _db;
+  List<Post> _posts;
 
   @override
-  void initState() {
+  void initState() async {
+    _db = DatabaseService(uid: widget.user.uid);
+    _posts = await _db.getAllPost();
     super.initState();
-    _tabController = TabController(initialIndex: 0, length: 3, vsync: this);
   }
+
+  void 
 
   final List<String> imgList = [
     'assets/images/add1.jpg',
@@ -29,6 +40,8 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
 
   @override
   Widget build(BuildContext context) {
+    var firebaseAuth = Provider.of<AuthProvider>(context);
+
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Color(0xFF6CA8F1),
@@ -137,7 +150,9 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                   text: 'Mi perfil',
                   icon: Icons.person,
                   isSelected: false,
-                  onTap: () {}
+                  onTap: () {
+
+                  }
               ),
             ]),
           ),
@@ -156,7 +171,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                       ListTile(
                         leading: Icon(Icons.logout),
                         title: Text('Cerrar Sesión'),
-                        onTap: () {},
+                        onTap: () => firebaseAuth.logout(),
                       ),
                     ],
                   )
@@ -197,45 +212,49 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
             ),
           ),
           SizedBox(height: 10),
-          TabBar(
-            controller: _tabController,
-            indicatorColor: Colors.transparent,
-            labelColor: Colors.black,
-            unselectedLabelColor: Colors.grey,
-            labelPadding: EdgeInsets.symmetric(horizontal: 35),
-            isScrollable: true,
-            tabs: [
-              Tab(
-                child: Text(
-                  'Novedades',
-                  style: TextStyle(
-                    fontSize: 16.0,
-                    fontWeight: FontWeight.bold
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Center(
+                child: SizedBox.fromSize(
+                  size: Size(60, 60), // button width and height
+                  child: ClipOval(
+                    child: Material(
+                      color: Colors.red, // button color
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: <Widget>[
+                          Icon(Icons.call), // icon
+                          Text("Call"), // text
+                        ],
+                      ),
+                    ),
                   ),
                 ),
               ),
-              Tab(
-                child: Text(
-                  'Recomendados',
-                  style: TextStyle(
-                      fontSize: 16.0,
-                      fontWeight: FontWeight.bold
+              SizedBox(width: 10),
+              Center(
+                child: SizedBox.fromSize(
+                  size: Size(60, 60), // button width and height
+                  child: ClipOval(
+                    child: Material(
+                      color: Colors.red, // button color
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: <Widget>[
+                          Icon(Icons.call), // icon
+                          Text("Vehículos"), // text
+                        ],
+                      ),
+                    ),
                   ),
                 ),
               ),
-              Tab(
-                child: Text(
-                  'Favoritos',
-                  style: TextStyle(
-                      fontSize: 16.0,
-                      fontWeight: FontWeight.bold
-                  ),
-                ),
-              )
             ],
           ),
           SizedBox(height: 10),
-          Expanded(
+          /*Expanded(
             child: ListView(
               padding: EdgeInsets.all(0),
               children: [
@@ -247,6 +266,14 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                 ProductTile(title: "TLC Televisión", description: "No tiene la base", photo: "6"),
                 ProductTile(title: "Kit de herramientas", description: "Marca Dewalt, americano", photo: "7")
               ],
+            ),
+          ),*/
+          Expanded(
+            child: ListView.builder(
+              itemCount: _posts.length,
+              itemBuilder: (context, index) {
+                return ProductTile(post: _posts[index]);
+              },
             ),
           )
         ],

@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "869333588866",
+    "project_id": "trueke-8a414",
+    "storage_bucket": "trueke-8a414.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:869333588866:android:66eae28f309d92ba2f4d9b",
+        "android_client_info": {
+          "package_name": "com.christianlara.trueke"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "869333588866-6ml60pork3sqlm74r7nc9c2kfndva9ih.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDiitEFycCcGGcbPanJeXzaGgS63a8nIeU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "869333588866-6ml60pork3sqlm74r7nc9c2kfndva9ih.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
