@@ -1,36 +1,23 @@
 import 'package:carousel_slider/carousel_slider.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:provider/provider.dart';
-import 'package:trueke/providers/auth_provider.dart';
 import 'package:trueke/screens/notification_screen.dart';
+import 'package:trueke/screens/notification_trueke_screen.dart';
 import 'package:trueke/services/database_service.dart';
 import 'package:trueke/tiles/product_tile.dart';
 import 'package:trueke/models/post.dart';
 import 'package:trueke/utilities/constants.dart';
+import 'package:trueke/widgets/category_button.dart';
 
 class HomeScreen extends StatefulWidget {
-  final User user;
+  const HomeScreen({Key key}) : super(key: key);
 
-  const HomeScreen({Key key, this.user}) : super(key: key);
   @override
   _HomeScreenState createState() => _HomeScreenState();
 }
 
 class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMixin{
-  DatabaseService _db;
-  List<Post> _posts;
-
-  @override
-  void initState() async {
-    _db = DatabaseService(uid: widget.user.uid);
-    _posts = await _db.getAllPost();
-    super.initState();
-  }
-
-  void 
 
   final List<String> imgList = [
     'assets/images/add1.jpg',
@@ -40,8 +27,6 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
 
   @override
   Widget build(BuildContext context) {
-    var firebaseAuth = Provider.of<AuthProvider>(context);
-
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Color(0xFF6CA8F1),
@@ -91,7 +76,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                         minHeight: 12,
                       ),
                       child: new Text(
-                        '2',
+                        '',
                         style: new TextStyle(
                           color: Colors.white,
                           fontSize: 8,
@@ -102,7 +87,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                   )
                 ],
               ),
-              onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => NotificationScreen())),
+              onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => NotificationTruekeScreen())),
           )
         ],
         elevation: 0,
@@ -124,7 +109,15 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                       'assets/logos/trueke.png',
                       width: 150,
                     )),
-                    SizedBox(height: 10)
+                    SizedBox(height: 10),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(FontAwesomeIcons.coins),
+                        SizedBox(width: 10),
+                        Text('${settings.truekoin}')
+                      ],
+                    )
                   ],
                 ),
               ),
@@ -141,6 +134,12 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                   onTap: () {}
               ),
               _menuItemTile(
+                text: 'Mis publicaciones',
+                icon: Icons.post_add,
+                isSelected: false,
+                onTap: () => Navigator.pushNamed(context, '/user_posts')
+              ),
+              _menuItemTile(
                   text: 'Mis truekes',
                   icon: Icons.shopping_basket,
                   isSelected: false,
@@ -150,9 +149,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                   text: 'Mi perfil',
                   icon: Icons.person,
                   isSelected: false,
-                  onTap: () {
-
-                  }
+                  onTap: () {}
               ),
             ]),
           ),
@@ -171,7 +168,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                       ListTile(
                         leading: Icon(Icons.logout),
                         title: Text('Cerrar Sesión'),
-                        onTap: () => firebaseAuth.logout(),
+                        onTap: () => signOut(context),
                       ),
                     ],
                   )
@@ -212,70 +209,56 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
             ),
           ),
           SizedBox(height: 10),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Center(
-                child: SizedBox.fromSize(
-                  size: Size(60, 60), // button width and height
-                  child: ClipOval(
-                    child: Material(
-                      color: Colors.red, // button color
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: <Widget>[
-                          Icon(Icons.call), // icon
-                          Text("Call"), // text
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              SizedBox(width: 10),
-              Center(
-                child: SizedBox.fromSize(
-                  size: Size(60, 60), // button width and height
-                  child: ClipOval(
-                    child: Material(
-                      color: Colors.red, // button color
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: <Widget>[
-                          Icon(Icons.call), // icon
-                          Text("Vehículos"), // text
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
+          Text('Categorías'),
           SizedBox(height: 10),
-          /*Expanded(
-            child: ListView(
-              padding: EdgeInsets.all(0),
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                ProductTile(title: "Laptop Huawei 8GB", description: "En perfecto estado 128SSD", photo: "1"),
-                ProductTile(title: "Laptop HP", description: "4 GB RAM", photo: "2"),
-                ProductTile(title: "Celular Xiaomi", description: "Redmi 9C Nuevo", photo: "3"),
-                ProductTile(title: "Motosierra", description: "Excelente para uso domestico", photo: "4"),
-                ProductTile(title: "Smartwatch Clon", description: "iWatch clon, nuevo", photo: "5"),
-                ProductTile(title: "TLC Televisión", description: "No tiene la base", photo: "6"),
-                ProductTile(title: "Kit de herramientas", description: "Marca Dewalt, americano", photo: "7")
+                CategoryButton(
+                  message: "Tecnología",
+                  icon: Icon(Icons.laptop, color: Colors.white)
+                ),
+                SizedBox(width: 10),
+                CategoryButton(
+                  message: "Juguetes",
+                  icon: Icon(FontAwesomeIcons.robot, color: Colors.white)
+                ),
+                SizedBox(width: 10),
+                CategoryButton(
+                  message: "Videojuegos",
+                  icon: Icon(FontAwesomeIcons.playstation, color: Colors.white)
+                ),
+                SizedBox(width: 10),
+                CategoryButton(
+                  message: "Vehículos",
+                  icon: Icon(FontAwesomeIcons.car, color: Colors.white)
+                ),
+                SizedBox(width: 10),
+                CategoryButton(
+                  message: "Telefonía",
+                  icon: Icon(FontAwesomeIcons.mobileAlt, color: Colors.white)
+                )
               ],
             ),
-          ),*/
+          ),
+          SizedBox(height: 10),
           Expanded(
-            child: ListView.builder(
-              itemCount: _posts.length,
-              itemBuilder: (context, index) {
-                return ProductTile(post: _posts[index]);
+            child: FutureBuilder(
+              future: getPosts(),
+              builder: (context, snapshot) {
+                if(snapshot.hasError) print(snapshot.error);
+                return snapshot.hasData ? ListView.builder(
+                  itemCount: snapshot.data.length,
+                  itemBuilder: (context, index){
+                    List list = snapshot.data;
+                    return ProductTile(post: Post.fromJson(list[index]));
+                  },
+                ) : Center(child: CircularProgressIndicator());
               },
             ),
-          )
+          ),
         ],
       ),
     );

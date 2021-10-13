@@ -1,51 +1,22 @@
-import 'package:carousel_slider/carousel_slider.dart';
-import 'package:cool_alert/cool_alert.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:trueke/models/post.dart';
-import 'package:trueke/models/user.dart';
-import 'package:trueke/screens/home_screen.dart';
 import 'package:trueke/screens/notification_screen.dart';
 import 'package:trueke/services/database_service.dart';
+import 'package:trueke/tiles/product_tile.dart';
+import 'package:trueke/models/post.dart';
 import 'package:trueke/utilities/constants.dart';
 
-class ItemDescriptionScreen extends StatefulWidget {
-  final dynamic json;
+class PostCategoryScreen extends StatefulWidget {
+  final String category;
 
-  const ItemDescriptionScreen({Key key, this.json}) : super(key: key);
+  const PostCategoryScreen({Key key, this.category}) : super(key: key);
 
   @override
-  _ItemDescriptionScreenState createState() => _ItemDescriptionScreenState();
+  _PostCategoryScreenState createState() => _PostCategoryScreenState();
 }
 
-class _ItemDescriptionScreenState extends State<ItemDescriptionScreen> {
-  Post post;
-  User owner;
-  int votes = 0;
-  bool favorite = false;
-  Icon icon;
-  List<String> imgList;
-
-  @override
-  void initState() {
-    icon = new Icon(Icons.favorite_border);
-    setProduct();
-    imgList = [
-      "https://sagarsoftware.com/public/posts/${post.id}/1.jpeg",
-      "https://sagarsoftware.com/public/posts/${post.id}/2.jpeg",
-      "https://sagarsoftware.com/public/posts/${post.id}/3.jpeg"
-    ];
-    super.initState();
-  }
-
-  void setProduct() {
-    print(widget.json);
-    setState(() {
-      post = Post.fromJson(widget.json['post']);
-      owner = User.fromJson(widget.json['user']);
-      votes = widget.json['votes'];
-    });
-  }
+class _PostCategoryScreenState extends State<PostCategoryScreen> with SingleTickerProviderStateMixin{
 
   @override
   Widget build(BuildContext context) {
@@ -147,7 +118,7 @@ class _ItemDescriptionScreenState extends State<ItemDescriptionScreen> {
                       text: 'Inicio',
                       icon: Icons.home,
                       isSelected: false,
-                      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => HomeScreen())),
+                      onTap: () => Navigator.pushNamed(context, '/home')
                   ),
                   _menuItemTile(
                       text: 'Favoritos',
@@ -159,7 +130,7 @@ class _ItemDescriptionScreenState extends State<ItemDescriptionScreen> {
                       text: 'Mis publicaciones',
                       icon: Icons.post_add,
                       isSelected: false,
-                      onTap: () => Navigator.pushNamed(context, '/user_posts')
+                      onTap: () {}
                   ),
                   _menuItemTile(
                       text: 'Mis truekes',
@@ -198,10 +169,8 @@ class _ItemDescriptionScreenState extends State<ItemDescriptionScreen> {
                   )
               ),
             ],
-          )
-      ),
+          )),
       body: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
             color: Color(0xFF6CA8F1),
@@ -212,147 +181,23 @@ class _ItemDescriptionScreenState extends State<ItemDescriptionScreen> {
             ),
           ),
           SizedBox(height: 10),
-          Padding(
-            padding: EdgeInsets.all(10),
-            child: Text("${post.condition}",
-              style: TextStyle(
-                color: Colors.grey,
-                fontSize: 15
-              ),
-            ),
-          ),
+          Text('${widget.category}'),
           SizedBox(height: 10),
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: 10),
-            child: Text("${post.title}",
-              style: TextStyle(
-                  color: Colors.black,
-                  fontSize: 25,
-                fontWeight: FontWeight.bold
-              ),
-            ),
-          ),
-          SizedBox(height: 5),
-          RichText(
-            text: TextSpan(
-              children: [
-                WidgetSpan(
-                  child: Icon(Icons.favorite, size: 15),
-                ),
-                TextSpan(
-                    text: " $votes votos",
-                    style: TextStyle(color: Colors.black)
-                ),
-              ],
-            ),
-          ),
-          SizedBox(height: 10),
-          Container(
-            color: Colors.grey[200],
-            child: CarouselSlider(
-              options: CarouselOptions(
-                  enlargeCenterPage: true,
-                  enableInfiniteScroll: true,
-              ),
-              items: imgList.map((item) => ClipRRect(
-                  child: Stack(
-                    fit: StackFit.expand,
-                    children: [
-                      new Image.network(item, fit: BoxFit.cover,
-                      ),
-                    ],
-                  )
-              )).toList(),
-            ),
-          ),
-          SizedBox(height: 10),
-          Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.black)
-            ),
-            child: ListTile(
-              title: Text('${owner.name} ${owner.lastname}'),
-              subtitle: RichText(
-                text: TextSpan(
-                  children: [
-                    WidgetSpan(
-                      child: Icon(Icons.place),
-                    ),
-                    TextSpan(
-                      text: " Zapopan, Jalisco",
-                      style: TextStyle(color: Colors.black)
-                    ),
-                  ],
-                ),
-              ),
-              leading: CircleAvatar(
-                radius: 25.0,
-                backgroundImage: NetworkImage(
-                  "https://sagarsoftware.com/public/profiles/${owner.image}",
-                ),
-                backgroundColor:  Colors.white,
-              ),
-              trailing: icon,
-              onTap: () {
-                favorite = !favorite;
-                setState(() {
-                  icon = favorite ? Icon(Icons.favorite) : Icon(Icons.favorite_border);
-                });
-              },
-            ),
-          ),
-          SizedBox(height: 10),
-          SizedBox(height: 15),
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: 10),
-            child: Text("Detalles",
-              style: TextStyle(
-                  color: Colors.black,
-                  fontSize: 25,
-                  fontWeight: FontWeight.bold
-              ),
-            ),
-          ),
-          SizedBox(height: 10),
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: 10),
-            child: Text(
-              '${post.description}',
-              style: TextStyle(
-                color: Colors.black
-              ),
-            ),
-          ),
-          SizedBox(height: 15),
-          Center(
-            child: ElevatedButton(
-              child: Text("Me interesa!"),
-              onPressed: () {
-                CoolAlert.show(
-                  context: context,
-                  type: CoolAlertType.confirm,
-                  title: 'Confirmación',
-                  text: '¿Mandar un mensaje de Trueke?',
-                  confirmBtnText: 'Sí',
-                  cancelBtnText: 'No',
-                  onConfirmBtnTap: () {
-                    // TODO mandar a elegir objeto
-                    if(settings.truekoin == 0) {
-                      CoolAlert.show(
-                        context: context,
-                        type: CoolAlertType.error,
-                        text: 'No cuenta con truekoins para realizar esta acción'
-                      );
-                    } else {
-                      Navigator.pushNamed(context, '/trueke', arguments: post);
-                    }
+          Expanded(
+            child: FutureBuilder(
+              future: getPostsByCategory(widget.category),
+              builder: (context, snapshot) {
+                if(snapshot.hasError) print(snapshot.error);
+                return snapshot.hasData ? ListView.builder(
+                  itemCount: snapshot.data.length,
+                  itemBuilder: (context, index){
+                    List list = snapshot.data;
+                    return ProductTile(post: Post.fromJson(list[index]));
                   },
-                  confirmBtnColor: Colors.green,
-                );
+                ) : Center(child: CircularProgressIndicator());
               },
             ),
-          )
+          ),
         ],
       ),
     );

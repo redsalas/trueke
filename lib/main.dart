@@ -1,46 +1,45 @@
-import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:provider/provider.dart';
-import 'package:trueke/utilities/wrapper.dart';
-import 'package:trueke/providers/auth_provider.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:trueke/providers/app.dart';
+import 'package:trueke/providers/user_provider.dart';
+import 'package:trueke/routes.dart';
+
+import 'app_settings.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  final settings = new AppSettings();
+  await settings.initPrefs();
+  HttpOverrides.global = new MyHttpOverrides();
 
-  runApp(MyApp());
+  runApp(
+    MultiProvider(
+        providers: [
+          ChangeNotifierProvider(create: (_) => App())
+        ],
+        child: UserProvider(
+            child: MaterialApp(
+              debugShowCheckedModeBanner: false,
+              title: "Trueke",
+              onGenerateRoute: Routes.initialize,
+              initialRoute: '/splash_screen',
+              builder: EasyLoading.init(),
+            )
+        )
+    ),
+  );
 
 }
 
-class MyApp extends StatelessWidget {
-  // This widget is the root of your application.
+class MyHttpOverrides extends HttpOverrides {
   @override
-  Widget build(BuildContext context) {
-    final _init = Firebase.initializeApp();
-    return FutureBuilder(
-      future: _init,
-      builder: (context, snapshot) {
-        if(snapshot.hasData) {
-          return MultiProvider(
-            providers: [
-              ChangeNotifierProvider<AuthProvider>.value(value: AuthProvider()),
-              StreamProvider<User>.value(
-                value: AuthProvider().user,
-                initialData: null,
-              )
-            ],
-            child: MaterialApp(
-              debugShowCheckedModeBanner: false,
-              home: Wrapper(),
-            ),
-          );
-        } else {
-          return Center(
-            child: CircularProgressIndicator(),
-          );
-        }
-      },
-    );
+  HttpClient createHttpClient(SecurityContext context){
+    return super.createHttpClient(context)
+      ..badCertificateCallback = (X509Certificate cert, String host, int port) {
+        final isValidHost = host == "sagarsoftware.com";
+        return isValidHost;
+      };
   }
 }
 

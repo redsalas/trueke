@@ -1,9 +1,13 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:provider/provider.dart';
-import 'package:trueke/providers/auth_provider.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
+import 'package:trueke/providers/user_provider.dart';
 import 'package:trueke/screens/signup_screen.dart';
 import 'package:trueke/utilities/constants.dart';
+import 'package:trueke/utilities/login_bloc.dart';
+import 'package:http/http.dart' as http;
 
 class LoginScreen extends StatefulWidget {
   @override
@@ -15,6 +19,16 @@ class _LoginScreenState extends State<LoginScreen> {
   TextEditingController _emailController;
   TextEditingController _passwordController;
   final _formKey = GlobalKey<FormState>();
+  FocusNode email = new FocusNode();
+  FocusNode pass = new FocusNode();
+  bool _obscureText = true;
+
+  _toggle() {
+    setState(() {
+      _obscureText = !_obscureText;
+    });
+  }
+
 
   @override
   void initState() {
@@ -31,75 +45,95 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-  Widget _buildEmailTF() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: <Widget>[
-        Text(
-          'Correo electrónico',
-          style: kLabelStyle,
-        ),
-        SizedBox(height: 10.0),
-        Container(
-          alignment: Alignment.centerLeft,
-          decoration: kBoxDecorationStyle,
-          height: 60.0,
-          child: TextField(
-            controller: _emailController,
-            keyboardType: TextInputType.emailAddress,
-            style: TextStyle(
-              color: Colors.white,
-              fontFamily: 'OpenSans',
+  Widget _buildEmailTF(LoginBloc bloc) {
+    return StreamBuilder(
+      stream: bloc.emailStream,
+      builder: (BuildContext context, AsyncSnapshot snapshot){
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Text(
+              'Correo electrónico',
+              style: kLabelStyle,
             ),
-            decoration: InputDecoration(
-              border: InputBorder.none,
-              contentPadding: EdgeInsets.only(top: 14.0),
-              prefixIcon: Icon(
-                Icons.email,
-                color: Colors.white,
+            SizedBox(height: 10.0),
+            Container(
+              alignment: Alignment.centerLeft,
+              decoration: kBoxDecorationStyle,
+              height: 60.0,
+              child: TextField(
+                onChanged: bloc.changeEmail,
+                controller: _emailController,
+                keyboardType: TextInputType.emailAddress,
+                style: TextStyle(
+                  color: Colors.white,
+                  fontFamily: 'OpenSans',
+                ),
+                decoration: InputDecoration(
+                  errorText: snapshot.error,
+                  border: InputBorder.none,
+                  contentPadding: EdgeInsets.only(top: 14.0),
+                  prefixIcon: Icon(
+                    Icons.email,
+                    color: Colors.white,
+                  ),
+                  hintText: 'Ingrese su correo electrónico',
+                  hintStyle: kHintTextStyle,
+                ),
               ),
-              hintText: 'Ingrese su correo electrónico',
-              hintStyle: kHintTextStyle,
             ),
-          ),
-        ),
-      ],
+          ],
+        );
+      },
     );
   }
 
-  Widget _buildPasswordTF() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: <Widget>[
-        Text(
-          'Contraseña',
-          style: kLabelStyle,
-        ),
-        SizedBox(height: 10.0),
-        Container(
-          alignment: Alignment.centerLeft,
-          decoration: kBoxDecorationStyle,
-          height: 60.0,
-          child: TextField(
-            controller: _passwordController,
-            obscureText: true,
-            style: TextStyle(
-              color: Colors.white,
-              fontFamily: 'OpenSans',
+  Widget _buildPasswordTF(LoginBloc bloc) {
+    return StreamBuilder(
+      stream: bloc.passwordStream,
+      builder: (BuildContext context, AsyncSnapshot snapshot){
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Text(
+              'Contraseña',
+              style: kLabelStyle,
             ),
-            decoration: InputDecoration(
-              border: InputBorder.none,
-              contentPadding: EdgeInsets.only(top: 14.0),
-              prefixIcon: Icon(
-                Icons.lock,
-                color: Colors.white,
+            SizedBox(height: 10.0),
+            Container(
+              alignment: Alignment.centerLeft,
+              decoration: kBoxDecorationStyle,
+              height: 60.0,
+              child: TextField(
+                controller: _passwordController,
+                obscureText: _obscureText,
+                style: TextStyle(
+                  color: Colors.white,
+                  fontFamily: 'OpenSans',
+                ),
+                decoration: InputDecoration(
+                  border: InputBorder.none,
+                  contentPadding: EdgeInsets.only(top: 14.0),
+                  prefixIcon: Icon(
+                    Icons.lock,
+                    color: Colors.white,
+                  ),
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                        _obscureText ? Icons.visibility : Icons.visibility_off
+                    ),
+                    onPressed: _toggle,
+                  ),
+                  errorText: snapshot.error,
+                  hintText: 'Ingrese su contraseña',
+                  hintStyle: kHintTextStyle,
+                ),
+                onChanged: bloc.changePassword,
               ),
-              hintText: 'Ingrese su contraseña',
-              hintStyle: kHintTextStyle,
             ),
-          ),
-        ),
-      ],
+          ],
+        );
+      },
     );
   }
 
@@ -238,9 +272,40 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
+  Widget _loginButton(LoginBloc bloc) {
+    return StreamBuilder(
+        stream: bloc.formValidStream,
+        builder: (BuildContext context, AsyncSnapshot snapshot) {
+          return Container(
+            padding: EdgeInsets.symmetric(vertical: 25.0),
+            width: double.infinity,
+            child: MaterialButton(
+              elevation: 5.0,
+              onPressed: snapshot.hasData ? () => _login(context, bloc) : null,
+              padding: EdgeInsets.all(15.0),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(30.0),
+              ),
+              color: Colors.white,
+              child: Text(
+                'ENTRAR',
+                style: TextStyle(
+                  color: Color(0xFF527DAA),
+                  letterSpacing: 1.5,
+                  fontSize: 18.0,
+                  fontWeight: FontWeight.bold,
+                  fontFamily: 'OpenSans',
+                ),
+              ),
+            ),
+          );
+        }
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    final loginProvider = Provider.of<AuthProvider>(context);
+    final bloc = UserProvider.of(context);
     return Scaffold(
       body: AnnotatedRegion<SystemUiOverlayStyle>(
         value: SystemUiOverlayStyle.light,
@@ -294,43 +359,14 @@ class _LoginScreenState extends State<LoginScreen> {
                       Form(
                         child: Column(
                           children: [
-                            _buildEmailTF(),
+                            _buildEmailTF(bloc),
                             SizedBox(
                               height: 30.0,
                             ),
-                            _buildPasswordTF(),
+                            _buildPasswordTF(bloc),
                             _buildForgotPasswordBtn(),
                             _buildRememberMeCheckbox(),
-                            Container(
-                              padding: EdgeInsets.symmetric(vertical: 25.0),
-                              width: double.infinity,
-                              child: MaterialButton(
-                                minWidth: loginProvider.isLoading ? null : double.infinity,
-                                elevation: 5.0,
-                                onPressed: () async {
-                                  await loginProvider.login(
-                                    _emailController.text.trim(),
-                                    _passwordController.text.trim()
-                                  );
-                                },
-                                padding: EdgeInsets.all(15.0),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(30.0),
-                                ),
-                                color: Colors.white,
-                                child: loginProvider.isLoading ? CircularProgressIndicator() :
-                                Text(
-                                  'ENTRAR',
-                                  style: TextStyle(
-                                    color: Color(0xFF527DAA),
-                                    letterSpacing: 1.5,
-                                    fontSize: 18.0,
-                                    fontWeight: FontWeight.bold,
-                                    fontFamily: 'OpenSans',
-                                  ),
-                                ),
-                              ),
-                            ),
+                            _loginButton(bloc),
                             _buildSignInWithText(),
                             _buildSocialBtnRow(),
                             _buildSignupBtn(),
@@ -346,5 +382,29 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
       ),
     );
+  }
+
+  Future _login(BuildContext context, LoginBloc bloc) async {
+    EasyLoading.show(status: 'Cargando. . .');
+    await http.post(Uri.parse('$serverLogin'), body: {
+      'email': bloc.email,
+      'password': bloc.password
+    }).then((response) {
+      var msg = json.decode(response.body);
+      if(msg['message'] == 'success') {
+        EasyLoading.dismiss();
+        EasyLoading.showSuccess('Bienvenido');
+        setState(() {
+          settings.userId = msg['id'].toString();
+          settings.userName = msg['name'];
+          settings.token = msg['token'];
+          settings.truekoin = msg['truekoin'].toString();
+          settings.image = msg['image'];
+        });
+        Navigator.pushReplacementNamed(context, '/home');
+      } else {
+        EasyLoading.showError('Usuario o contraseña incorrectos');
+      }
+    });
   }
 }
